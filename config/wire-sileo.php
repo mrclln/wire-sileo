@@ -1,55 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 return [
-    /*
-    |--------------------------------------------------------------------------
-    | Default Position
-    |--------------------------------------------------------------------------
-    |
-    | The default position for toasts. Sileo supports the following positions:
-    | top-left, top-center, top-right, bottom-left, bottom-center, bottom-right
-    |
-    */
     'position' => 'top-right',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Duration
-    |--------------------------------------------------------------------------
-    |
-    | The default duration in milliseconds before the toast auto-dismisses.
-    | Set to null for persistent toasts (no auto-dismiss).
-    |
-    */
-    'duration' => 3000,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Fill Color
-    |--------------------------------------------------------------------------
-    |
-    | The default fill color for toasts (e.g., '#ff0000' or 'red').
-    |
-    */
+    'theme' => 'system',
     'fill' => null,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Border Radius
-    |--------------------------------------------------------------------------
-    |
-    | The default border radius in pixels.
-    |
-    */
-    'roundness' => null,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Theme
-    |--------------------------------------------------------------------------
-    |
-    | The default theme for the toaster. Options: light, dark, system
-    |
-    */
-    'theme' => 'light',
+    'roundness' => 16,
+    'duration' => 4000,
+    'autopilot' => null,
+    'styles' => [
+        'title' => null,
+        'description' => null,
+        'badge' => null,
+        'button' => null,
+    ],
+    'toaster' => [
+        'offset' => null,
+    ],
+    'events' => [
+        'toast' => 'sileo',
+        'promise' => 'sileo.promise',
+        'resolve_prefix' => 'sileo.resolve.',
+        'reject_prefix' => 'sileo.reject.',
+    ],
 ];

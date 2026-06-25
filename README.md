@@ -1,170 +1,111 @@
-# WireSileo
+# wire-sileo
 
-A Laravel Livewire package for Sileo notifications with a fluent API and facade support.
+A Laravel Livewire package that brings the Sileo toast notification system to Livewire applications with a fluent, facade-first API.
 
 ## Installation
 
-Install the package via Composer:
+Install the package and frontend dependencies:
 
 ```bash
 composer require mrclln/wire-sileo
+npm install sileo react react-dom
 ```
 
-Install Sileo and React via npm:
+Publish the configuration, JavaScript bridge, and view:
 
 ```bash
-npm install sileo react react-dom @vitejs/plugin-react
+php artisan vendor:publish --tag=wire-sileo
 ```
 
-## Configuration
+## Setup
 
-Publish the configuration file (optional):
+Add the Livewire toaster to your application layout:
 
-```bash
-php artisan vendor:publish --tag=wire-sileo:config
+```blade
+<livewire:wire-sileo />
 ```
 
-## Frontend Setup
-
-### 1. Create resources/js/sileo-setup.jsx
-
-Create this file in your resources/js folder:
-
-```jsx
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import { sileo, Toaster } from 'sileo';
-import 'sileo/styles.css';
-
-// Make sileo available globally for Livewire
-window.sileo = sileo;
-
-// Create a container for the Toaster
-const container = document.createElement('div');
-container.id = 'sileo-toaster-root';
-container.style.cssText = 'position: fixed; top: 0; right: 0; z-index: 9999; pointer-events: none;';
-document.body.appendChild(container);
-
-const root = createRoot(container);
-root.render(
-    <React.StrictMode>
-        <Toaster position="top-right" />
-    </React.StrictMode>
-);
-```
-
-### 2. Update resources/js/app.js
+Import the published bridge in your app entrypoint:
 
 ```js
-import './sileo-setup';
+import './wire-sileo.js';
 ```
 
-### 3. Update vite.config.js
-
-Add the React plugin:
-
-```javascript
-import react from '@vitejs/plugin-react';
-
-export default defineConfig({
-    plugins: [
-        laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
-            refresh: true,
-        }),
-        tailwindcss(),
-        react(), // Add this
-    ],
-});
-```
-
-### 4. Build your assets
-
-```bash
-npm run build
-```
+Then build your assets with Vite.
 
 ## Usage
 
-### Using the Facade
+Use the facade in your Livewire components:
 
 ```php
-use mrclln\WireSileo\Facades\WireSileo;
+use Sileo\Facades\Sileo;
 
-class MyComponent extends \Livewire\Component
+class MyComponent extends Component
 {
-    public function save()
+    public function save(): void
     {
-        // Save logic here...
+        Sileo::success('Saved successfully');
 
-        WireSileo::success('Saved!', 'Your data has been saved successfully.');
-    }
-}
-```
-
-### Using the Trait
-
-```php
-use mrclln\WireSileo\Concerns\InteractsWithSileo;
-
-class MyComponent extends \Livewire\Component
-{
-    use InteractsWithSileo;
-
-    public function save()
-    {
-        // Save logic here...
-
-        $this->sileo()
-            ->success()
-            ->title('Saved!')
-            ->description('Your data has been saved successfully.')
-            ->show();
-    }
-
-    // Or use the quick methods
-    public function delete()
-    {
-        $this->sileoSuccess('Deleted!', 'Item deleted successfully.');
+        Sileo::title('Delete record?')
+            ->description('This action cannot be undone.')
+            ->danger()
+            ->confirm('Delete')
+            ->cancel('Cancel')
+            ->position('top-center')
+            ->send();
     }
 }
 ```
 
 ### Fluent API
 
+- `Sileo::success('Saved successfully')`
+- `Sileo::error('Something went wrong')`
+- `Sileo::warning('Unsaved changes')`
+- `Sileo::info('New update available')`
+
+### Custom options
+
 ```php
-WireSileo::title('Hello')
-    ->description('This is a notification')
-    ->success()
-    ->position('top-right')
-    ->duration(3000)
-    ->show();
+Sileo::title('Welcome')
+    ->description('You can customize every option.')
+    ->position('bottom-right')
+    ->duration(6000)
+    ->theme('dark')
+    ->fill('#1f2937')
+    ->roundness(20)
+    ->styles(['title' => 'text-white', 'button' => 'bg-slate-800'])
+    ->send();
 ```
 
-### Available Methods
+### Confirm / cancel
 
-**Toast Types:**
-- `success()` - Green success toast
-- `error()` - Red error toast
-- `warning()` - Yellow warning toast
-- `info()` - Blue info toast
-- `loading()` - Loading spinner toast
-- `action()` - Action toast
+```php
+Sileo::title('Delete record?')
+    ->description('This cannot be undone.')
+    ->danger()
+    ->confirm('Delete')
+    ->cancel('Cancel')
+    ->send();
+```
 
-**Configuration:**
-- `title(string)` - Set the toast title
-- `description(string)` - Set the toast description
-- `position(string)` - Set position (top-left, top-center, top-right, bottom-left, bottom-center, bottom-right)
-- `topLeft()`, `topCenter()`, `topRight()`, `bottomLeft()`, `bottomCenter()`, `bottomRight()` - Quick position setters
-- `duration(int|null)` - Set duration in milliseconds (null for persistent)
-- `persistent()` - Make the toast persist until manually dismissed
-- `icon($icon)` - Set a custom icon
-- `noIcon()` - Remove the default icon
-- `styles(array)` - Set custom styles
-- `fill(string)` - Set fill color
-- `roundness(int)` - Set border radius
-- `button(string $title, ?string $action)` - Add a button with optional Livewire action
+### Promise toasts
 
-## License
+```php
+Sileo::make()
+    ->title('Saving...')
+    ->loading()
+    ->send();
+```
 
-MIT
+For a promise pattern, dispatch a `sileo.promise` event from your component using browser events or your own helper.
+
+## Configuration
+
+Publish the configuration file using:
+
+```bash
+php artisan vendor:publish --tag=wire-sileo-config
+```
+
+Then update `config/wire-sileo.php` to change default position, theme, or styles.

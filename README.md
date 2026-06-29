@@ -16,14 +16,24 @@ Install the package and frontend dependencies:
 
 ```bash
 composer require mrclln/wire-sileo
-npm install sileo react react-dom
+npm install sileo lucide-react react react-dom
 ```
+
+The package requires:
+- `sileo` - The React toast component (v0.1.5+)
+- `lucide-react` - Icon library for custom icons
+- `react` and `react-dom` - Required by Sileo
 
 Publish the configuration, JavaScript bridge, and view:
 
 ```bash
 php artisan vendor:publish --tag=wire-sileo
 ```
+
+This publishes:
+- `config/wire-sileo.php` - Configuration file
+- `resources/js/wire-sileo.js` - JavaScript bridge
+- `resources/views/wire-sileo.blade.php` - Blade view component
 
 ## Setup
 
@@ -33,19 +43,35 @@ Add the Livewire toaster to your application layout:
 <livewire:wire-sileo />
 ```
 
-Import the published bridge in your app entrypoint:
+Import the published bridge in your Vite entrypoint, or add it to `vite.config.js`:
+
+**Option 1: Import in your app entrypoint (e.g., `resources/js/app.js`):**
 
 ```js
 import './wire-sileo.js';
 ```
 
-Then build your assets with Vite.
+**Option 2: Add as a separate Vite input (in `vite.config.js`):**
+
+```js
+laravel({
+    input: ['resources/js/app.js', 'resources/js/wire-sileo.js'],
+    // ...
+}),
+```
+
+Then build your assets with Vite:
+
+```bash
+npm run dev
+```
 
 ## Usage
 
 Use the facade in your Livewire components:
 
 ```php
+use Livewire\Attributes\On;
 use Sileo\Facades\Sileo;
 
 class MyComponent extends Component
@@ -64,25 +90,11 @@ class MyComponent extends Component
             ->send();
     }
 
-    public function confirmAction(): void
-    {
-        Sileo::danger()
-            ->title('Delete record?')
-            ->description('This cannot be undone.')
-            ->confirm('Delete', 'deleteRecord', ['id' => $id])
-            ->cancel('recordDeleted') // Called when toast is dismissed
-            ->send();
-    }
-
+    #[On('deleteRecord')]
     public function deleteRecord(): void
     {
         // Handle deletion
         $this->record->delete();
-    }
-
-    public function recordDeleted(): void
-    {
-        // Handle dismissal
     }
 }
 ```
@@ -115,6 +127,48 @@ Sileo::success()
     ->send();
 ```
 
+### Available Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `title` | string | Toast heading text |
+| `description` | string | Toast body text (plain text) |
+| `html` | string | Raw HTML content (renders HTML markup) |
+| `position` | string | Position: `top-right`, `top-center`, `top-left`, `bottom-right`, `bottom-center`, `bottom-left` |
+| `duration` | int/null | Display time in milliseconds. `null` disables auto-dismiss |
+| `theme` | string | Theme: `light`, `dark`, or `system` (default: follows OS preference) |
+| `fill` | string | Background color (CSS value like `#1f2937` or Tailwind color like `white`) |
+| `roundness` | int | Border radius in pixels (default: 16) |
+| `styles` | array | Custom Tailwind classes: `['title' => '', 'description' => '', 'badge' => '', 'button' => '']` |
+| `customClasses` | array/string | Additional CSS classes to apply to the toast container |
+| `icon` | string | Icon name from lucide-react (e.g., `rocket`, `check`, `info`, `alert-circle`) |
+
+### HTML Content
+
+For HTML in toast content, use the `html()` method (note: this renders raw HTML via `dangerouslySetInnerHTML`):
+
+```php
+Sileo::success()
+    ->title('Done!')
+    ->html('<strong>Item</strong> was saved successfully.')
+    ->send();
+```
+
+⚠️ Security: Only use trusted HTML content as it renders raw markup without sanitization.
+
+### Custom Icons
+
+Pass an icon name to replace the default state icon:
+
+```php
+Sileo::success()
+    ->title('Deployed!')
+    ->icon('rocket')
+    ->send();
+```
+
+Available icons: Any icon from [lucide-react](https://lucide.dev/icons) (use kebab-case: `alert-circle`, `check-circle`, `loader-2`, `trash`, etc.).
+
 ### Array Configuration
 
 Pass an array with all options at once:
@@ -138,24 +192,21 @@ Toasts with a single interactive button:
 
 ```php
 Sileo::action()
-    ->title('New sale')
-    ->description('A new order was placed.')
-    ->button('View', 'openOrder', ['id' => $order->id])
-    ->send();
-```
-
-For confirmation dialogs, use `confirm()` for the primary button and `cancel()` for dismissal handling:
-
-```php
-Sileo::danger()
     ->title('Delete record?')
     ->description('This cannot be undone.')
-    ->confirm('Delete', 'deleteRecord', ['id' => $id])
-    ->cancel('sileo.cancel') // Called when toast is dismissed
+    ->fill('white')
+    ->icon('trash')
+    ->button('Delete', 'deleteRecord', ['id' => $id])
+    ->styles([
+        'title' => '!text-red-500 font-bold',
+        'description' => '!text-red-400',
+        'badge' => '!bg-red-100 !text-red-700',
+        'button' => '!bg-red-100 !hover:bg-red-200 !text-red-700 !hover:text-red-800',
+    ])
     ->send();
 ```
 
-Note: Sileo action toasts only support a single button. The `cancel()` method sets up a dismiss handler.
+Note: Sileo action toasts only support a single button. Use `button()` for the action and set `duration(null)` if you want the toast to persist until interaction.
 
 ### Promise Toasts
 
@@ -164,26 +215,29 @@ Promise toasts show a loading state that resolves or rejects based on your backe
 **Fluent API:**
 
 ```php
-protected $listeners = ['saveRecord'];
+use Livewire\Attributes\On;
 
-public function triggerSave(): void
+class MyComponent extends Component
 {
-    Sileo::promise()
-        ->event('saveRecord')
-        ->loadingOptions(['title' => 'Saving...', 'description' => 'Please wait'])
-        ->successOptions(['title' => 'Saved!', 'description' => 'Record updated'])
-        ->errorOptions(['title' => 'Failed!', 'description' => 'Could not save'])
-        ->send();
-}
+    public function triggerSave(): void
+    {
+        Sileo::promise()
+            ->event('saveRecord')
+            ->loadingOptions(['title' => 'Saving...', 'description' => 'Please wait'])
+            ->successOptions(['title' => 'Saved!', 'description' => 'Record updated'])
+            ->errorOptions(['title' => 'Failed!', 'description' => 'Could not save'])
+            ->send();
+    }
 
-// In your event handler
-public function saveRecord(): void
-{
-    try {
-        $this->record->save();
-        Sileo::promiseResolve('saveRecord');
-    } catch (\Exception $e) {
-        Sileo::promiseReject('saveRecord');
+    #[On('saveRecord')]
+    public function saveRecord(): void
+    {
+        try {
+            $this->record->save();
+            Sileo::promiseResolve('saveRecord');
+        } catch (\Exception $e) {
+            Sileo::promiseReject('saveRecord');
+        }
     }
 }
 ```
@@ -191,7 +245,16 @@ public function saveRecord(): void
 **Array API:**
 
 ```php
-protected $listeners = ['processData'];
+#[On('processData')]
+public function processData(): void
+{
+    try {
+        // Your logic here
+        Sileo::promiseResolve('processData');
+    } catch (\Exception $e) {
+        Sileo::promiseReject('processData');
+    }
+}
 
 public function triggerProcess(): void
 {
@@ -201,17 +264,6 @@ public function triggerProcess(): void
         'success' => ['title' => 'Done!', 'description' => 'Data processed'],
         'error' => ['title' => 'Failed!', 'description' => 'An error occurred'],
     ])->send();
-}
-
-// In your event handler
-public function processData(): void
-{
-    try {
-        // Your logic here
-        Sileo::promiseResolve('processData');
-    } catch (\Exception $e) {
-        Sileo::promiseReject('processData');
-    }
 }
 ```
 
@@ -257,12 +309,7 @@ return [
 
 ## Screenshots
 
-<!-- Add screenshots in the `screenshots/` directory -->
-<!-- Example: ![Success toast](screenshots/success.png) -->
-
-## Demo
-
-<!-- Add demo video/screencast to showcase the features -->
+![Success toast](screenshots/1.png)
 
 ## Credits
 

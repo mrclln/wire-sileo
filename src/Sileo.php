@@ -101,6 +101,11 @@ class Sileo
         return static::make()->styles($styles);
     }
 
+    public static function icon(string $icon): SileoNotification
+    {
+        return static::make()->icon($icon);
+    }
+
     public static function option(string $key, mixed $value): SileoNotification
     {
         return static::make()->option($key, $value);

@@ -172,6 +172,13 @@ class SileoNotification
         return $this;
     }
 
+    public function icon(string $icon): static
+    {
+        $this->options['icon'] = $icon;
+
+        return $this;
+    }
+
     public function promise(): static
     {
         $this->options['type'] = 'promise';

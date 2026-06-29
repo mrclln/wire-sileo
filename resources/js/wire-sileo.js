@@ -1,10 +1,11 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { sileo, Toaster } from 'sileo';
+import * as Icons from 'lucide-react';
 
 const root = document.getElementById('sileo-portal');
 if (!root) {
-    throw new Error('wire-sileo: Missing <div id="sileo-portal"> element. Add <livewire:wire-sileo /> to your layout.');
+    return;
 }
 
 const position = root.dataset.position || 'top-right';
@@ -25,26 +26,43 @@ createRoot(root).render(
     }),
 );
 
+const renderIcon = (icon) => {
+    if (!icon) return null;
+    
+    if (typeof icon === 'string') {
+        const camelName = icon.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase()).replace(/^([a-z])/, (_, letter) => letter.toUpperCase());
+        const IconComponent = Icons[camelName] || Icons.Info;
+        return React.createElement(IconComponent, { className: 'size-3.5' });
+    }
+    
+    if (React.isValidElement(icon)) {
+        return icon;
+    }
+    
+    return null;
+};
+
 const dispatchEvent = (detail) => {
-    const { type = 'info', position, button, dismissEvent, duration, title, description, html, ...rest } = detail ?? {};
+    const { type = 'info', position, button, dismissEvent, duration, title, description, html, icon, ...rest } = detail ?? {};
 
     const opts = {
         ...(title ? { title } : {}),
-        ...(html ? { html } : description ? { description } : {}),
+        ...(html ? { description: React.createElement('span', { dangerouslySetInnerHTML: { __html: html } }) } : description ? { description } : {}),
         ...(duration !== undefined ? { duration } : {}),
         ...(position ? { position } : {}),
+        ...(icon ? { icon: renderIcon(icon) } : {}),
         ...rest,
     };
 
     if (button) {
         opts.button = {
             title: button.title,
-            onClick: button.onClick ?? (() => Livewire.dispatch(button.event, button.params ?? [])),
+            onClick: button.onClick ?? (() => Livewire.dispatch(button.event, button.params ?? {})),
         };
     }
 
     if (dismissEvent) {
-        opts.onDismiss = () => Livewire.dispatch(dismissEvent.event, ...(dismissEvent.params ?? []));
+        opts.onDismiss = () => Livewire.dispatch(dismissEvent.event, dismissEvent.params ?? {});
     }
 
     const methods = {
@@ -81,8 +99,18 @@ window.addEventListener('sileo.promise', ({ detail }) => {
     const resolveEvent = `sileo.resolve.${event}`;
     const rejectEvent = `sileo.reject.${event}`;
 
-    const normalize = (value) =>
-        typeof value === 'string' ? { title: value } : value;
+    const normalize = (value) => {
+        if (typeof value === 'string') {
+            return { title: value };
+        }
+        if (value?.icon) {
+            return { ...value, icon: renderIcon(value.icon) };
+        }
+        if (value?.html) {
+            return { ...value, description: React.createElement('span', { dangerouslySetInnerHTML: { __html: value.html } }) };
+        }
+        return value;
+    };
 
     const promise = new Promise((resolve, reject) => {
         window.addEventListener(resolveEvent, resolve, { once: true });

@@ -200,9 +200,47 @@ class Sileo
         return $notification;
     }
 
-    public static function promise(string|array $options): SileoNotification
+    public static function promise(string|array $options = []): SileoNotification
     {
-        return static::make()->options($options)->promise();
+        $notification = static::make()->promise();
+
+        if (is_string($options)) {
+            $notification->option('event', $options);
+        } elseif (is_array($options)) {
+            $notification->options($options);
+        }
+
+        return $notification;
+    }
+
+    public static function promiseResolve(string $event, array $data = []): void
+    {
+        $component = app('livewire')->current();
+
+        if (! $component instanceof Component) {
+            throw new \RuntimeException('Sileo requires a Livewire component context.');
+        }
+
+        if (method_exists($component, 'dispatch')) {
+            $component->dispatch("sileo.resolve.{$event}", $data);
+        } else {
+            $component->dispatchBrowserEvent("sileo.resolve.{$event}", $data);
+        }
+    }
+
+    public static function promiseReject(string $event, array $data = []): void
+    {
+        $component = app('livewire')->current();
+
+        if (! $component instanceof Component) {
+            throw new \RuntimeException('Sileo requires a Livewire component context.');
+        }
+
+        if (method_exists($component, 'dispatch')) {
+            $component->dispatch("sileo.reject.{$event}", $data);
+        } else {
+            $component->dispatchBrowserEvent("sileo.reject.{$event}", $data);
+        }
     }
 
     protected function defaultOptions(): array

@@ -179,6 +179,52 @@ class SileoNotification
         return $this;
     }
 
+    public function event(string $event): static
+    {
+        $this->options['event'] = $event;
+
+        return $this;
+    }
+
+    public function loadingOptions(string|array|null $options = null): static
+    {
+        if (is_array($options)) {
+            $this->options['loading'] = $options;
+        } elseif ($options !== null) {
+            $this->options['loading'] = ['title' => $options, 'description' => ''];
+        } else {
+            $this->options['loading'] = [];
+        }
+
+        return $this;
+    }
+
+    public function successOptions(string|array|null $options = null): static
+    {
+        if (is_array($options)) {
+            $this->options['success'] = $options;
+        } elseif ($options !== null) {
+            $this->options['success'] = ['title' => $options, 'description' => ''];
+        } else {
+            $this->options['success'] = [];
+        }
+
+        return $this;
+    }
+
+    public function errorOptions(string|array|null $options = null): static
+    {
+        if (is_array($options)) {
+            $this->options['error'] = $options;
+        } elseif ($options !== null) {
+            $this->options['error'] = ['title' => $options, 'description' => ''];
+        } else {
+            $this->options['error'] = [];
+        }
+
+        return $this;
+    }
+
     public function send(): void
     {
         if (! $this->component) {

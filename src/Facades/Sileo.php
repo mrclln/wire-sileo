@@ -29,7 +29,13 @@ use Sileo\Enums\Position;
  * @method static \Sileo\Notifications\SileoNotification loading(string|array|null $title = null, string $description = '', int|null $duration = null, Position|string $position = Position::TopRight)
  * @method static \Sileo\Notifications\SileoNotification danger(string|array|null $title = null, string $description = '', int|null $duration = null, Position|string $position = Position::TopRight)
  * @method static \Sileo\Notifications\SileoNotification action(string|array|null $options = null)
- * @method static \Sileo\Notifications\SileoNotification promise(string|array $options)
+ * @method static \Sileo\Notifications\SileoNotification promise(string|array $options = [])
+ * @method static void promiseResolve(string $event, array $data = [])
+ * @method static void promiseReject(string $event, array $data = [])
+ * @method static \Sileo\Notifications\SileoNotification event(string $event)
+ * @method static \Sileo\Notifications\SileoNotification loadingOptions(string|array|null $options = null)
+ * @method static \Sileo\Notifications\SileoNotification successOptions(string|array|null $options = null)
+ * @method static \Sileo\Notifications\SileoNotification errorOptions(string|array|null $options = null)
  */
 class Sileo extends Facade
 {

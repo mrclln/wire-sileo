@@ -10,6 +10,7 @@
     ],
     "homepage": "https://github.com/mrclln/wire-sileo",
     "license": "MIT",
+    "type": "library",
     "authors": [
         {
             "name": "mrclln",

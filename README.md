@@ -314,7 +314,7 @@ return [
 ## Credits
 
 - UI design inspired by [Sileo](https://github.com/hiaaryan/sileo) by Aaryan Khandekar
-- Notification patterns inspired by [Livewire Alert](https://github.com/jantinnerezo/livewire-alert) by Jan Tinner
+- Notification patterns inspired by [Livewire Alert](https://github.com/jantinnerezo/livewire-alert) by Jantinn Erezo
 
 ## License
 

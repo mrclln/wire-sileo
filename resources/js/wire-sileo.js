@@ -5,7 +5,7 @@ import * as Icons from 'lucide-react';
 
 const root = document.getElementById('sileo-portal');
 if (!root) {
-    return;
+    throw new Error('wire-sileo: Missing <div id="sileo-portal"> element. Add <livewire:wire-sileo /> to your layout.');
 }
 
 const position = root.dataset.position || 'top-right';
@@ -28,17 +28,17 @@ createRoot(root).render(
 
 const renderIcon = (icon) => {
     if (!icon) return null;
-    
+
     if (typeof icon === 'string') {
         const camelName = icon.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase()).replace(/^([a-z])/, (_, letter) => letter.toUpperCase());
         const IconComponent = Icons[camelName] || Icons.Info;
         return React.createElement(IconComponent, { className: 'size-3.5' });
     }
-    
+
     if (React.isValidElement(icon)) {
         return icon;
     }
-    
+
     return null;
 };
 
